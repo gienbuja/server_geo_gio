@@ -7,6 +7,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import { ref } from 'vue';
 
 const form = useForm({
     name: '',
@@ -16,7 +17,20 @@ const form = useForm({
     terms: false,
 });
 
-const submit = () => {
+const hashPassword = ref('');
+
+const generateHashPass = async () => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(form.password);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hash));
+    hashPassword.value = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+const submit = async() => {
+    await generateHashPass();
+    form.password = hashPassword.value;
+    form.password_confirmation = hashPassword.value;
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
@@ -68,6 +82,7 @@ const submit = () => {
                     class="mt-1 block w-full"
                     required
                     autocomplete="new-password"
+                    :disabled="form.processing"
                 />
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
@@ -81,6 +96,7 @@ const submit = () => {
                     class="mt-1 block w-full"
                     required
                     autocomplete="new-password"
+                    :disabled="form.processing"
                 />
                 <InputError class="mt-2" :message="form.errors.password_confirmation" />
             </div>
