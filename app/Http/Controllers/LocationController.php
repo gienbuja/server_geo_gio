@@ -23,9 +23,9 @@ class LocationController extends Controller
         }
 
         $locations = Auth::user()->locations()
-            ->whereBetween('created_at', [$startDate, $endDate])->get();
+            ->whereBetween('datetime', [$startDate, $endDate])->get();
 
-        return response()->json($locations);
+        return response()->json($locations, 201);
     }
 
     /**
@@ -45,7 +45,11 @@ class LocationController extends Controller
             $validatedData = $request->validate([
                 'latitude' => 'required|numeric',
                 'longitude' => 'required|numeric',
-                'comment' => 'nullable|string|max:255',
+                'title' => 'required_if:manual,true|string|max:255',
+                'description' => 'nullable|string',
+                'icon' => 'nullable|string',
+                'manual' => 'nullable|boolean',
+                'visible' => 'nullable|boolean',
                 'datetime' => ['required', 'date', function ($attribute, $value, $fail) {
                     try {
                         $date = Carbon::parse($value);
@@ -58,14 +62,27 @@ class LocationController extends Controller
                 }],
             ]);
             $validatedData['user_id'] = Auth::user()->id;
+            $validatedData['zone_id'] = null;
 
-            Location::create($validatedData);
+            $zones = Auth::user()->zones()->get();
 
-            return response()->json(['message' => 'Guardado'], 201);
+            if (!$zones->isEmpty()) {
+                $zones->each(function ($zone) use (&$validatedData) {
+                    $radiusInMeters = $zone->radius;
+                    if ($this->isWithinRadius($validatedData['latitude'], $validatedData['longitude'], $zone->latitude, $zone->longitude, $radiusInMeters)) {
+                        $validatedData['zone_id'] = $zone->id;
+                        return;
+                    }
+                });
+            }
+            
+            $location = Location::create($validatedData);
+
+            return response()->json($location, 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
+            return response()->json($e->errors(), 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json($e->getMessage(), 401);
         }
     }
 
@@ -99,5 +116,30 @@ class LocationController extends Controller
     public function destroy(Location $location)
     {
         //
+    }
+
+    function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius) {
+        // Convertir grados a radianes
+        $lat1 = deg2rad($lat1);
+        $lon1 = deg2rad($lon1);
+        $lat2 = deg2rad($lat2);
+        $lon2 = deg2rad($lon2);
+    
+        // Radio de la Tierra en metros
+        $earthRadius = 6371000;
+    
+        // Diferencias de coordenadas
+        $dLat = $lat2 - $lat1;
+        $dLon = $lon2 - $lon1;
+    
+        // Fórmula de Haversine
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos($lat1) * cos($lat2) *
+             sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        $distance = $earthRadius * $c;
+    
+        // Comparar la distancia con el radio
+        return $distance <= $radius;
     }
 }

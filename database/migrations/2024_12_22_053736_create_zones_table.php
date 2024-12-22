@@ -11,17 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('locations', function (Blueprint $table) {
+        Schema::create('zones', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->max(255);
             $table->decimal('latitude', 10, 7);
             $table->decimal('longitude', 10, 7);
-            $table->string('title')->max(255)->nullable();
+            $table->decimal('radius', 10, 7);
+            $table->string('color')->nullable();
             $table->text('description')->nullable();
-            $table->string('icon')->nullable();
-            $table->dateTime('datetime');
-            $table->boolean('manual')->default(false);
             $table->boolean('visible')->default(true);
-            $table->foreignId('zone_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->softDeletes();
             $table->timestamps();
@@ -33,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('locations');
+        Schema::dropIfExists('zones');
     }
 };

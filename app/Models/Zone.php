@@ -7,20 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
-class Location extends Model implements Auditable
+class Zone extends Model implements Auditable
 {
     use HasFactory, SoftDeletes, \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
-        'title',
+        'name',
         'description',
-        'icon',
-        'zone_id',
         'visible',
         'latitude',
         'longitude',
-        'comment',
-        'datetime',
+        'radius',
         'manual',
         'user_id',
     ];
@@ -28,7 +25,7 @@ class Location extends Model implements Auditable
     protected $casts = [
         'visible' => 'boolean',
         'manual' => 'boolean',
-        'datetime' => 'datetime',
+        'radius' => 'integer',
     ];
 
     public function user()

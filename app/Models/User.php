@@ -65,4 +65,9 @@ class User extends Authenticatable implements AuditableContract
     {
         return $this->hasMany(Location::class);
     }
+
+    public function zones()
+    {
+        return $this->hasMany(Zone::class);
+    }
 }

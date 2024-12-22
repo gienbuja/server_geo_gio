@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,9 +28,17 @@ Route::middleware(['auth:sanctum', 'ensureTokenIsValid'])->group(function () {
         return response()->json($request->user());
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+    
     Route::get('/locations', [LocationController::class, 'index']);
     Route::post('/locations', [LocationController::class, 'store']);
     Route::get('/locations/{location}', [LocationController::class, 'show']);
     Route::put('/locations/{location}', [LocationController::class, 'update']);
     Route::delete('/locations/{location}', [LocationController::class, 'destroy']);
+
+    Route::get('/zones', [ZoneController::class, 'index']);
+    Route::post('/zones', [ZoneController::class, 'store']);
+    Route::get('/zones/{zone}', [ZoneController::class, 'show']);
+    Route::put('/zones/{zone}', [ZoneController::class, 'update']);
+    Route::delete('/zones/{zone}', [ZoneController::class, 'destroy']);
+    
 });
