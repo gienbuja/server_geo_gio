@@ -25,7 +25,7 @@ class LocationController extends Controller
         $locations = Auth::user()->locations()
             ->whereBetween('datetime', [$startDate, $endDate])->get();
 
-        return response()->json($locations, 201);
+        return response()->json($locations, 200);
     }
 
     /**
