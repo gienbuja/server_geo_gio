@@ -31,12 +31,14 @@ Route::middleware(['auth:sanctum', 'ensureTokenIsValid'])->group(function () {
     
     Route::get('/locations', [LocationController::class, 'index']);
     Route::post('/locations', [LocationController::class, 'store']);
+    Route::post('/syncLocations', [LocationController::class, 'storeAll']);
     Route::get('/locations/{location}', [LocationController::class, 'show']);
     Route::put('/locations/{location}', [LocationController::class, 'update']);
     Route::delete('/locations/{location}', [LocationController::class, 'destroy']);
 
     Route::get('/zones', [ZoneController::class, 'index']);
     Route::post('/zones', [ZoneController::class, 'store']);
+    Route::post('/syncZones', [ZoneController::class, 'storeAll']);
     Route::get('/zones/{zone}', [ZoneController::class, 'show']);
     Route::put('/zones/{zone}', [ZoneController::class, 'update']);
     Route::delete('/zones/{zone}', [ZoneController::class, 'destroy']);

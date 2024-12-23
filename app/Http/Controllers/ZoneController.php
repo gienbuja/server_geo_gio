@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Zone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class ZoneController extends Controller
 {
@@ -15,7 +16,7 @@ class ZoneController extends Controller
     {
         //
         $zones = Auth::user()->zones()->get();
-        return response()->json($zones,201);
+        return response()->json($zones, 201);
     }
 
     /**
@@ -45,6 +46,53 @@ class ZoneController extends Controller
             $validatedData['user_id'] = auth()->id();
             $zone = Zone::create($validatedData);
             return response()->json($zone, 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 422);
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage(), 401);
+        }
+    }
+
+    public function storeAll(Request $request)
+    {
+        try {
+            $zones = $request->all();
+            $validZones = [];
+            $invalidZones = [];
+
+            // Validar cada zona en el array
+            foreach ($zones as $zone) {
+                $validator = Validator::make($zone, [
+                    'name' => 'required|string|max:255',
+                    'description' => 'nullable|string',
+                    'color' => 'nullable|string',
+                    'visible' => 'nullable|boolean',
+                    'latitude' => 'required|numeric',
+                    'longitude' => 'required|numeric',
+                    'radius' => 'required|numeric',
+                ]);
+
+                if ($validator->fails()) {
+                    $invalidZones[] = [
+                        'zone' => $zone,
+                        'errors' => $validator->errors()
+                    ];
+                } else {
+                    $validZones[] = $zone;
+                }
+            }
+
+            // Procesar zonas válidas
+            $validZones = array_map(function ($zone) {
+                $zone['user_id'] = auth()->id();
+                return Zone::create($zone);
+            }, $validZones);
+
+            // Devolver zonas no válidas
+            return response()->json([
+                'saved_zones' => $validZones,
+                'invalid_zones' => $invalidZones
+            ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json($e->errors(), 422);
         } catch (\Exception $e) {
